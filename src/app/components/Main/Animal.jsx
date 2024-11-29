@@ -16,6 +16,7 @@ const Animal = () => {
   const [animalName, setAnimalName] = useState(""); 
   const [animalCategoryName, setAnimalCategoryName] = useState(""); 
   const [loading, setLoading] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [loadingState, setLoadingState] = useState(true);
   const [allAnimals, setAllAnimals] = useState(false);
 
@@ -31,6 +32,7 @@ const Animal = () => {
 
       const data = await response.json();
       setCategories(data.data); 
+      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -40,6 +42,7 @@ const Animal = () => {
 
   useEffect(() => {
     fetchCategories();
+    
   }, []);
 
   const fetchAnimals = async () => {
@@ -65,11 +68,12 @@ const Animal = () => {
    
     setLoadingState(true); // Start loading
     setTimeout(() => {
-      setLoadingState(false); // End loading
       
-  
+      fetchAnimals();
+      setLoadingState(false); // End loading
+     
     }, 2000);
-    fetchAnimals();
+   
   }, []);
 
   const handleSubmit = async (e) => {
@@ -202,9 +206,14 @@ const Animal = () => {
   const handleCategory = name => {
     const filter = animals.filter(animal=>animal.animalCategoryName === name)
     setAllAnimals(true);
-   
     
-      setFilteredAnimals(filter);
+    
+    setFilteredAnimals(filter);
+    if(filter.length===0){
+      setHidden(true);
+    }else{
+      setHidden(false);
+    }
    
     
     setActiveCategory(name);
@@ -348,9 +357,7 @@ const Animal = () => {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-white"></div>
         </div> // Show loading message
-      ) : filteredAnimals.length === 0 ? (
-        <div className="text-white text-center">No Data Found</div> // Show "No Data Found" only after loading is complete
-      ) : (
+      ) :
         filteredAnimals.map((animal) => (
           <div className="space-y-2" key={animal._id}>
             <div className="border-2 py-12 border-[#141414] rounded-lg flex items-center justify-center">
@@ -364,10 +371,13 @@ const Animal = () => {
             </div>
             <h4 className="text-white text-center">{animal.animalName}</h4>
           </div>
-        ))
+        )
       )}
      
     </div>
+    {
+      hidden?<div className='flex items-center justify-center'><h4 className='text-2xl text-white'>No Data Found</h4></div>:""
+    }
     </div>
   );
 };
