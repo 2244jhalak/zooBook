@@ -2,16 +2,12 @@
 
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { FaArrowLeft, FaArrowRight, FaFan } from 'react-icons/fa';
+import { FaFan } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 const Animal = () => {
   const [isOpen, setIsOpen] = useState(null);
   const closeModal = () => setIsOpen(null);
-
-  const [visibleButtons, setVisibleButtons] = useState([]); 
-  const [startIndex, setStartIndex] = useState(0); 
-  const maxVisibleButtons = 6; 
   const [activeCategory, setActiveCategory] = useState(""); // Tracks the active category
   const [categories, setCategories] = useState([]);
   const [animals, setAnimals] = useState([]);
@@ -20,6 +16,7 @@ const Animal = () => {
   const [animalName, setAnimalName] = useState(""); 
   const [animalCategoryName, setAnimalCategoryName] = useState(""); 
   const [loading, setLoading] = useState(false);
+  const [loadingState, setLoadingState] = useState(true);
   const [allAnimals, setAllAnimals] = useState(false);
 
   const fetchCategories = async () => {
@@ -65,6 +62,13 @@ const Animal = () => {
   };
 
   useEffect(() => {
+   
+    setLoadingState(true); // Start loading
+    setTimeout(() => {
+      setLoadingState(false); // End loading
+      
+  
+    }, 2000);
     fetchAnimals();
   }, []);
 
@@ -193,51 +197,24 @@ const Animal = () => {
     } finally {
       setLoading(false); // Ensure loading state is reset
     }
-  } 
-
-  const handleNext = () => {
-    const nextIndex = startIndex + 1;
-    if (nextIndex + maxVisibleButtons <= categories.length) {
-      setStartIndex(nextIndex);
-      setVisibleButtons(categories.slice(nextIndex, nextIndex + maxVisibleButtons));
-    }
-  };
-
-  const handlePrev = () => {
-    const prevIndex = startIndex - 1;
-    if (prevIndex >= 0) {
-      setStartIndex(prevIndex);
-      setVisibleButtons(categories.slice(prevIndex, prevIndex + maxVisibleButtons));
-    }
-  };
-
-  useEffect(() => {
-    setVisibleButtons(categories.slice(startIndex, startIndex + maxVisibleButtons));
-  }, [categories, startIndex]);
+  }
 
   const handleCategory = name => {
     const filter = animals.filter(animal=>animal.animalCategoryName === name)
     setAllAnimals(true);
-    setFilteredAnimals(filter);
+   
+    
+      setFilteredAnimals(filter);
+   
+    
     setActiveCategory(name);
     
   }
   return (
     <div className='pt-20'>
-      <div className="flex items-center justify-between">
-      <div className="flex items-center gap-5 mb-4">
-        {/* Show the previous and next buttons only if there are more than 4 categories */}
-        {categories.length > maxVisibleButtons && (
-          <button
-            onClick={handlePrev}
-            disabled={startIndex === 0}
-            className={`px-5 py-3 rounded-full ${startIndex === 0 ? "bg-gray-300 cursor-not-allowed" : "bg-black text-white"}`}
-          >
-            <FaArrowLeft />
-          </button>
-        )}
-
-        {visibleButtons.map((category) => (
+      <div className="flex lg:flex-row md:flex-row flex-col items-center gap-5 justify-between">
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-5">
+        {categories.map((category) => (
           <button
             key={category._id}
             onClick={()=>handleCategory(category.name)}
@@ -251,19 +228,9 @@ const Animal = () => {
             {category.name}
           </button>
         ))}
-
-        {categories.length > maxVisibleButtons && (
-          <button
-            onClick={handleNext}
-            disabled={startIndex + maxVisibleButtons >= categories.length}
-            className={`p-2 rounded-full ${startIndex + maxVisibleButtons >= categories.length ? "bg-gray-300 cursor-not-allowed" : "bg-black text-white"}`}
-          >
-            <FaArrowRight />
-          </button>
-        )}
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex lg:flex-row md:flex-col flex-col items-center gap-5">
         <button
           onClick={() => setIsOpen('animal')}
           className="bg-black text-white border-2 border-white rounded-3xl px-8 py-3"
@@ -363,7 +330,7 @@ const Animal = () => {
         </div>
       )}
     </div>
-    <div className='grid grid-cols-6 gap-5 mt-12'>
+    <div className='grid lg:grid-cols-6 md:grid-cols-4 grid-cols-2 mx-2 gap-5 mt-12'>
       
         {
           animals.map
@@ -377,18 +344,28 @@ const Animal = () => {
           </div>
           ) 
         }
-        {
-          filteredAnimals.map
-          (
-            animal=>
+      {loadingState ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-white"></div>
+        </div> // Show loading message
+      ) : filteredAnimals.length === 0 ? (
+        <div className="text-white text-center">No Data Found</div> // Show "No Data Found" only after loading is complete
+      ) : (
+        filteredAnimals.map((animal) => (
           <div className="space-y-2" key={animal._id}>
-            <div className='border-2 py-12 border-[#141414] rounded-lg flex items-center justify-center'>
-               <Image className='h-20 w-20' src={animal.image} alt='' width={200} height={200}></Image>
+            <div className="border-2 py-12 border-[#141414] rounded-lg flex items-center justify-center">
+              <Image
+                className="h-20 w-20"
+                src={animal.image}
+                alt={animal.animalName}
+                width={200}
+                height={200}
+              />
             </div>
-            <h4 className='text-white text-center'>{animal.animalName}</h4>
+            <h4 className="text-white text-center">{animal.animalName}</h4>
           </div>
-          ) 
-        }
+        ))
+      )}
      
     </div>
     </div>
